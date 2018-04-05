@@ -1,3 +1,4 @@
+CREATE VIEW vwMovies AS 
 SELECT t0.id
 	,t0.Title
 	,t0.ReleaseYear
