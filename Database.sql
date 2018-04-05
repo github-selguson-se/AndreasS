@@ -292,3 +292,9 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2018-04-03 16:14:22
+
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('1', '1', '1', '2018-04-09');
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('2', '2', '2', '2018-04-09');
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('3', '3', '3', '2018-04-09');
+
+
