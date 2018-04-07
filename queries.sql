@@ -13,3 +13,5 @@ select * from vwemployeelease;
 select * from vwmostleasedmovie;
 -- 7
 call spStartLease (1, 2, 3)
+-- 8
+select latelease(3)
