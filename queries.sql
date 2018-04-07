@@ -17,3 +17,5 @@ call spStartLease (2, 3, 4);
 select latelease(3);
 -- 9
 call spStopLease (1);
+-- 10
+-- No command due to trigger
