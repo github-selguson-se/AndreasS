@@ -152,8 +152,9 @@ CREATE TABLE `leased` (
   `Movie_Id` int(11) NOT NULL,
   `Employee_Id` int(11) NOT NULL,
   `Customer_Id` int(11) NOT NULL,
-  `Until` date NOT NULL,
-  `Returned` date DEFAULT NULL,
+  `StartDate` datetime NOT NULL,
+  `ReturnDate` datetime DEFAULT NULL,
+  `Late` bit(1) DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Leased_Movie_idx` (`Movie_Id`),
   KEY `FK_Leased_Employee_idx` (`Employee_Id`),
@@ -161,7 +162,7 @@ CREATE TABLE `leased` (
   CONSTRAINT `FK_Leased_Customer` FOREIGN KEY (`Customer_Id`) REFERENCES `customer` (`Id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_Leased_Employee` FOREIGN KEY (`Employee_Id`) REFERENCES `employee` (`Id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_Leased_Movie` FOREIGN KEY (`Movie_Id`) REFERENCES `movie` (`Id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,8 +171,29 @@ CREATE TABLE `leased` (
 
 LOCK TABLES `leased` WRITE;
 /*!40000 ALTER TABLE `leased` DISABLE KEYS */;
+-- INSERT INTO `leased` (`Id`, `Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`, `ReturnDate`, `Late`) VALUES (1,1,1,1,'2018-04-01 00:00:00','2018-04-07 12:32:49','\0'),(2,2,2,2,'2018-04-03 00:00:00','2018-04-07 12:28:16','\0'),(3,3,3,3,'2018-03-31 00:00:00','2018-04-07 12:28:54',''),(4,1,2,3,'2018-04-05 00:00:00','2018-04-07 12:32:49','\0'),(5,2,3,4,'2018-04-07 00:00:00','2018-04-07 12:28:16','\0'),(6,2,3,4,'2018-04-07 00:00:00',NULL,NULL);
 /*!40000 ALTER TABLE `leased` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER trUpdateStatistics
+AFTER INSERT ON leased
+FOR EACH ROW
+BEGIN
+INSERT INTO statistics (Movie_Id, LeasedStart, LeasedEnd) VALUES (new.Movie_Id, new.StartDate, (select date_add(new.StartDate, interval 4 day)));
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `movie`
@@ -267,8 +289,8 @@ DROP TABLE IF EXISTS `statistics`;
 CREATE TABLE `statistics` (
   `Movie_Id` int(11) NOT NULL,
   `LeasedStart` datetime NOT NULL,
-  `LeasedEnd` date NOT NULL,
-  PRIMARY KEY (`Movie_Id`),
+  `LeasedEnd` datetime NOT NULL,
+  PRIMARY KEY (`Movie_Id`,`LeasedStart`,`LeasedEnd`),
   CONSTRAINT `FK_Statistics_Movie` FOREIGN KEY (`Movie_Id`) REFERENCES `movie` (`Id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -279,8 +301,267 @@ CREATE TABLE `statistics` (
 
 LOCK TABLES `statistics` WRITE;
 /*!40000 ALTER TABLE `statistics` DISABLE KEYS */;
+-- INSERT INTO `statistics` (`Movie_Id`, `LeasedStart`, `LeasedEnd`) VALUES (2,'2018-04-07 00:00:00','2018-04-11 00:00:00');
 /*!40000 ALTER TABLE `statistics` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Temporary view structure for view `vwemployeelease`
+--
+
+DROP TABLE IF EXISTS `vwemployeelease`;
+/*!50001 DROP VIEW IF EXISTS `vwemployeelease`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwemployeelease` AS SELECT 
+ 1 AS `EmployeeName`,
+ 1 AS `QtyOfLease`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vwgetleased`
+--
+
+DROP TABLE IF EXISTS `vwgetleased`;
+/*!50001 DROP VIEW IF EXISTS `vwgetleased`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwgetleased` AS SELECT 
+ 1 AS `Title`,
+ 1 AS `EmployeeName`,
+ 1 AS `CustomerName`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vwlatelease`
+--
+
+DROP TABLE IF EXISTS `vwlatelease`;
+/*!50001 DROP VIEW IF EXISTS `vwlatelease`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwlatelease` AS SELECT 
+ 1 AS `Title`,
+ 1 AS `CustomerName`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vwmostleasedmovie`
+--
+
+DROP TABLE IF EXISTS `vwmostleasedmovie`;
+/*!50001 DROP VIEW IF EXISTS `vwmostleasedmovie`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwmostleasedmovie` AS SELECT 
+ 1 AS `Title`,
+ 1 AS `QtyOfLease`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vwmovies`
+--
+
+DROP TABLE IF EXISTS `vwmovies`;
+/*!50001 DROP VIEW IF EXISTS `vwmovies`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwmovies` AS SELECT 
+ 1 AS `id`,
+ 1 AS `Title`,
+ 1 AS `ReleaseYear`,
+ 1 AS `Playtime`,
+ 1 AS `AgeLimit`,
+ 1 AS `Country`,
+ 1 AS `Genre`,
+ 1 AS `Cast`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vwmoviesgenre`
+--
+
+DROP TABLE IF EXISTS `vwmoviesgenre`;
+/*!50001 DROP VIEW IF EXISTS `vwmoviesgenre`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `vwmoviesgenre` AS SELECT 
+ 1 AS `Title`,
+ 1 AS `Genre`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping routines for database 'andreass'
+--
+/*!50003 DROP FUNCTION IF EXISTS `LateLease` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `LateLease`(m INT) RETURNS int(11)
+    DETERMINISTIC
+begin
+set @x = (select StartDate from leased where movie_id = m order by StartDate desc limit 1);
+set @x = (select date_add(@x, interval 4 day));
+set @x = (select if (@x < now(), 1, 0));
+RETURN @x;
+end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `spStartLease` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spStartLease`(IN movie_id INT, employee_id INT, customer_id INT)
+begin
+		insert into leased (movie_id, employee_id, customer_id, startdate) values (movie_id, employee_id, customer_id, now());
+    end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `spStopLease` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spStopLease`(IN m_id INT)
+BEGIN
+UPDATE Leased SET ReturnDate = now(), late = (select latelease(m_id)) where movie_id = m_id;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Final view structure for view `vwemployeelease`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwemployeelease`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwemployeelease` AS select `t0`.`Name` AS `EmployeeName`,(select count(0) from `leased` where (`t0`.`Id` = `employee_id`)) AS `QtyOfLease` from `employee` `t0` order by 2 desc */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vwgetleased`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwgetleased`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwgetleased` AS select `t1`.`Title` AS `Title`,`t2`.`Name` AS `EmployeeName`,`t3`.`Name` AS `CustomerName` from (((`leased` `t0` left join `movie` `t1` on((`t0`.`Movie_Id` = `t1`.`Id`))) join `employee` `t2` on((`t0`.`Employee_Id` = `t2`.`Id`))) join `customer` `t3` on((`t0`.`Customer_Id` = `t3`.`Id`))) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vwlatelease`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwlatelease`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwlatelease` AS select `t1`.`Title` AS `Title`,`t2`.`Name` AS `CustomerName` from ((`leased` `t0` left join `movie` `t1` on((`t0`.`Movie_Id` = `t1`.`Id`))) left join `customer` `t2` on((`t0`.`Customer_Id` = `t2`.`Id`))) where (((`t0`.`StartDate` + interval 4 day) <= cast(now() as date)) and isnull(`t0`.`ReturnDate`)) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vwmostleasedmovie`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwmostleasedmovie`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwmostleasedmovie` AS select `t1`.`Title` AS `Title`,count(0) AS `QtyOfLease` from (`statistics` `t0` join `movie` `t1` on((`t0`.`Movie_Id` = `t1`.`Id`))) group by `t0`.`Movie_Id` order by count(0) desc */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vwmovies`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwmovies`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwmovies` AS select `t0`.`Id` AS `id`,`t0`.`Title` AS `Title`,`t0`.`ReleaseYear` AS `ReleaseYear`,`t0`.`PlayTime` AS `Playtime`,`t0`.`AgeLimit` AS `AgeLimit`,`t1`.`Name` AS `Country`,group_concat(distinct `t3`.`Name` order by `t3`.`Name` ASC separator ', ') AS `Genre`,group_concat(distinct concat(`t5`.`Role`,': ',`t5`.`Name`) order by `t5`.`Role` ASC separator ', ') AS `Cast` from (((((`movie` `t0` join `country` `t1` on((`t0`.`Country_Id` = `t1`.`Id`))) join `movie_genre` `t2` on((`t0`.`Id` = `t2`.`Movie_Id`))) join `genre` `t3` on((`t2`.`Genre_Id` = `t3`.`Id`))) join `movie_cast` `t4` on((`t0`.`Id` = `t4`.`Movie_Id`))) join `cast` `t5` on((`t4`.`Cast_Id` = `t5`.`Id`))) group by `t0`.`Id`,`t0`.`Title`,`t0`.`ReleaseYear`,`t0`.`PlayTime`,`t0`.`AgeLimit`,`t1`.`Name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vwmoviesgenre`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vwmoviesgenre`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vwmoviesgenre` AS select `t0`.`Title` AS `Title`,group_concat(distinct `t3`.`Name` order by `t3`.`Name` ASC separator ', ') AS `Genre` from ((`movie` `t0` join `movie_genre` `t2` on((`t0`.`Id` = `t2`.`Movie_Id`))) join `genre` `t3` on((`t2`.`Genre_Id` = `t3`.`Id`))) group by `t0`.`Title` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -291,10 +572,18 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-04-03 16:14:22
+-- Dump completed on 2018-04-07 13:09:38
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('1', '1', '1', '2018-04-02');
 
-INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('1', '1', '1', '2018-04-09');
-INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('2', '2', '2', '2018-04-09');
-INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `Until`) VALUES ('3', '3', '3', '2018-04-09');
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('6', '2', '2', '2018-04-03');
 
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('7', '1', '1', '2018-04-01');
+
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('8', '2', '2', '2018-04-04');
+
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('9', '3', '8', '2018-04-05');
+
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('10', '4', '6', '2018-04-06');
+
+INSERT INTO `andreass`.`leased` (`Movie_Id`, `Employee_Id`, `Customer_Id`, `StartDate`) VALUES ('11', '4', '7', '2018-04-07');
 

@@ -13,9 +13,16 @@ select * from vwemployeelease;
 select * from vwmostleasedmovie;
 -- 7
 call spStartLease (2, 3, 4);
+call spStartLease (3, 3, 4);
+call spStartLease (4, 5, 2);
+call spStartLease (5, 4, 3);
 -- 8
-select latelease(3);
+select latelease(1);
+select latelease(2);
 -- 9
-call spStopLease (1);
+call spStopLease (2);
+call spStopLease (3);
+call spStopLease (4);
+call spStopLease (5);
 -- 10
--- No command due to trigger
+select * from statistics
